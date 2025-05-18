@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语期末复习助手</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .unit-selection button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .unit-selection button:hover {
+            background-color: #0056b3;
+        }
+        .unit-selection button.active {
+            background-color: #004085;
+        }
+        .content-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .content-section h3 {
+            margin-top: 0;
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .translation-toggle {
+            padding: 5px 10px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .translation-toggle:hover {
+            background-color: #1e7e34;
+        }
+        .translation-text {
+            display: none;
+            margin-top: 5px;
+            padding: 10px;
+            background-color: #e9f5e9;
+            border-left: 3px solid #28a745;
+            color: #155724;
+        }
+        .word-pair span, .phrase-pair span {
+            display: inline-block;
+        }
+        .word-pair .en, .phrase-pair .en {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .sentence-item, .translation-passage-item {
+            margin-bottom: 15px;
+        }
+        .sentence-item p, .translation-passage-item p {
+            margin: 5px 0;
+        }
+        /* 新增的卡片样式 */
+        .word-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        .word-card {
+            width: 280px;
+            perspective: 1000px;
+            margin-bottom: 20px;
+        }
+        .word-card-inner {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .word-card:hover .word-card-inner {
+            transform: rotateY(180deg);
+        }
+        .word-card-front, .word-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        .word-card-front {
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #dee2e6;
+        }
+        .word-card-back {
+            background-color: #e9ecef;
+            color: #333;
+            transform: rotateY(180deg);
+            border: 1px solid #dee2e6;
+            text-align: left;
+            overflow-y: auto;
+        }
+        .word-card-en {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .word-card-zh {
+            font-size: 16px;
+            color: #6c757d;
+        }
+        .word-card-root {
+            margin-top: 15px;
+            text-align: left;
+            padding: 8px;
+            background-color: #f1f8ff;
+            border-left: 3px solid #007bff;
+            font-size: 14px;
+        }
+        /* 添加发音相关样式 */
+        .speaker-icon {
+            cursor: pointer;
+            margin-left: 5px;
+            color: #007bff;
+            font-size: 16px;
+        }
+        .word-card-en, .sentence-en {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+        }
+        .word-card-en:hover, .sentence-en:hover, .speaker-icon:hover {
+            color: #0056b3;
+        }
+        .speak-btn {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 8px;
+            cursor: pointer;
+            color: #007bff;
+            font-size: 12px;
+        }
+        .speak-btn:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>英语期末复习助手</h1>
+
+        <div class="unit-selection" id="unitSelection">
+            <!-- Unit buttons will be generated here by JavaScript -->
+        </div>
+
+        <div id="unitContent">
+            <!-- Content will be loaded here -->
+            <p style="text-align:center;">请选择一个单元开始学习。</p>
+        </div>
+    </div>
+
+    <script>
+        // 添加语音合成功能
+        function speakText(text) {
+            // 检查浏览器是否支持语音合成
+            if ('speechSynthesis' in window) {
+                // 创建一个新的语音合成实例
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // 设置语言为英语
+                utterance.lang = 'en-US';
+                
+                // 语速稍微放慢一点，便于学习
+                utterance.rate = 0.9;
+                
+                // 开始朗读
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.log('您的浏览器不支持语音合成功能');
+                alert('您的浏览器不支持语音合成功能，请使用Chrome、Edge等现代浏览器');
+            }
+        }
+        
+        // 创建发音图标元素
+        function createSpeakerIcon() {
+            const speakerIcon = document.createElement('span');
+            speakerIcon.className = 'speaker-icon';
+            speakerIcon.innerHTML = '🔊';
+            speakerIcon.title = '点击发音';
+            return speakerIcon;
+        }
+        
+        // 添加单元数据和JavaScript功能
+        const unitsData = [];
+        
+        // 添加Unit 1
+        unitsData.push({
+            unitNumber: 1,
+            title: "Unit 1",
+            words: [
+                { en: "Absorb", zh: "汲取；吸收", root: "词根：ab-(away) + sorb(吸收) = 吸收、汲取" },
+                { en: "Acquaintance", zh: "（对某人某事的）了解；认识；熟人", root: "词根：ac-(to) + quaint(知道) + -ance(名词后缀) = 相识、熟人" },
+                { en: "Assign", zh: "分配（任务）给某人", root: "词根：as-(to) + sign(标记) = 分配、指定" },
+                { en: "Aware", zh: "知道的；意识到的", root: "词根：a- + ware(警惕) = 意识到的、知道的" },
+                { en: "Command", zh: "掌握，运用能力", root: "词根：com-(together) + mand(命令) = 命令、掌握" },
+                { en: "Commit", zh: "做出（错或非法的事）；犯罪；托付", root: "词根：com-(together) + mit(送) = 委托、犯下(错误)" },
+                { en: "Communicate", zh: "交流情况（或消息、思想等）；沟通", root: "词根：com-(together) + mun(共同) + icate(使...化) = 交流、沟通" },
+                { en: "Complain", zh: "抱怨，埋怨", root: "词根：com-(together) + plain(拍打) = 抱怨、诉苦" },
+                { en: "Concentrate (on)", zh: "集中注意力，专心", root: "词根：con-(together) + centr(中心) + ate(使...化) = 集中、专注" },
+                { en: "Constant", zh: "经常（发生）的，不断的", root: "词根：con-(together) + st(站) + ant(形容词后缀) = 恒定的、不变的" },
+                { en: "Effective", zh: "有效的", root: "词根：ef-(out) + fect(做) + ive(形容词后缀) = 有效的、生效的" },
+                { en: "Enlarge", zh: "扩大，放大；变大", root: "词根：en-(使) + large(大的) = 使变大、扩大" },
+                { en: "Environment", zh: "环境；自然（生态）环境", root: "词根：environ(周围) + ment(名词后缀) = 环境、周围的事物" },
+                { en: "Handle", zh: "处理；对付；控制", root: "词根：hand(手) + le(动词后缀) = 处理、操作" },
+                { en: "Means", zh: "方法，手段", root: "来自mean(意味着)的复数形式 = 方法、手段" },
+                { en: "Nevertheless", zh: "然而，尽管如此", root: "词组：never + the + less = 尽管如此、然而" },
+                { en: "Opportunity", zh: "机会", root: "词根：op-(toward) + port(港口) + unity(名词后缀) = 机会、时机" },
+                { en: "Process", zh: "过程", root: "词根：pro-(forward) + cess(行走) = 过程、步骤" },
+                { en: "Purchase", zh: "购买；购置物", root: "词根：pur-(thoroughly) + chase(追逐) = 购买、采购" },
+                { en: "Reliable", zh: "可靠的", root: "词根：re-(back) + li(联系) + able(能...的) = 可靠的、可信赖的" },
+                { en: "Strategy", zh: "策略", root: "词根：strat(军队) + egy(学问) = 战略、策略" },
+                { en: "Summarize", zh: "总结；概括，概述", root: "词根：sum(总和) + mar(海) + ize(使...化) = 总结、概括" }
+            ],
+            phrases: [
+                { en: "apart from", zh: "除…外（还有）" },
+                { en: "at a time", zh: "每次，一次" },
+                { en: "be bound to", zh: "肯定会" },
+                { en: "by no means", zh: "决不" },
+                { en: "in addition to", zh: "除…外（还有）" },
+                { en: "in detail", zh: "详细地" },
+                { en: "on a regular/daily/weekly basis", zh: "经常/每天/每周" },
+                { en: "over and over again", zh: "反复，多次" },
+                { en: "put...into practice", zh: "把…付诸实践" },
+                { en: "seek out", zh: "寻找，找出" },
+                { en: "watch out for", zh: "密切注意" }
+            ],
+            sentences: [
+                { en: "Mrs. Smith complained to me that she often found it simply impossible to communicate with her 16-year-old daughter.", zh: "史密斯太太对我抱怨说，她经常发现与自己 16 岁的女儿简直无法沟通。" },
+                { en: "I firmly believe that reading simplified English novels is an easy and enjoyable way of enlarging our vocabulary.", zh: "我坚信，阅读简写的英文小说是扩大我们词汇量的一种轻松愉快的方法。" },
+                { en: "I don't think we're doing enough to protect our environment from pollution.", zh: "我认为我们在保护环境不受污染方面还做得不够。" },
+                { en: "Seeing English movies on a regular basis will not only improve your ear, but will also help you build your speaking skills.", zh: "经常看电影不仅会提高你的听力，而且还会帮助你培养说的技能。" },
+                { en: "If you have any questions about these learning strategies, please feel free to ask me. And I'll explain them in greater detail.", zh: "如果你们对这些学习策略有什么问题，请随便问我。我将更详细地进行讲解。" }
+            ],
+            translation: {
+                en: "Do not treat all new words in exactly the same way. Have you ever complained about your memory because you find it simply impossible to memorize all the new words you are learning? But, in fact, it is not your memory that is at fault. If you cram your head with too many new words at a time, some of them are bound to be crowded out. What you need to do is to deal with new words in different ways according to how frequently they occur in everyday use. While active words demand constant practice and useful words must be committed to memory, words that do not often occur in everyday situations require just a nodding acquaintance. You will find concentrating on active and useful words the most effective route to enlarge your vocabulary.",
+                zh: "不要以完全同样的方式来对待所有的生词。你可曾因为简直无法记住所学的所有生词而抱怨自己的记忆力太差？其实，责任并不在你的记忆力。如果你一下子把太多的生词塞进脑子里，必定有一些生词会被挤出来。你需要做的是根据生词日常使用的频率来用不同的方式对待它们。积极词汇需要经常练习，有用的词汇必须牢记，而在日常情况下不常出现的词只需见到时认识即可。你会发现把注意力集中到积极有用的词上是扩大词汇量最有效的途径。"
+            }
+        });
+        
+        // 添加Unit 2
+        unitsData.push({
+            unitNumber: 2,
+            title: "Unit 2",
+            words: [
+                { en: "Accomplish", zh: "完成", root: "词根：ac-(to) + com-(together) + plish(填满) = 完成、达成" },
+                { en: "Conquer", zh: "征服", root: "词根：con-(together) + quer(寻求) = 征服、克服" },
+                { en: "Contact", zh: "联系，接触", root: "词根：con-(together) + tact(触摸) = 接触、联系" },
+                { en: "Cover", zh: "行过（一段距离）；掩盖", root: "词根：co-(together) + ver(看) = 覆盖、掩盖" },
+                { en: "Device", zh: "设备；装置", root: "词根：de-(down) + vice(视) = 装置、设备" },
+                { en: "Drag", zh: "（费力地）拖，拉", root: "源自古英语词汇draggan = 拖、拉" },
+                { en: "Following", zh: "接着的；下列的", root: "来自follow(跟随) + ing(形容词后缀) = 跟随的、下列的" },
+                { en: "Fortunately", zh: "幸运地；幸亏", root: "词根：fortune(运气) + ate(形容词后缀) + ly(副词后缀) = 幸运地" },
+                { en: "Moreover", zh: "此外；而且", root: "词组：more + over = 此外、而且" },
+                { en: "Nearby", zh: "在附近", root: "词组：near + by = 附近的、在附近" },
+                { en: "Nightmare", zh: "噩梦", root: "源自古英语词组：night + mare(妖怪) = 噩梦" },
+                { en: "Previous", zh: "以前的，先前的", root: "词根：pre-(before) + vi(路) + ous(形容词后缀) = 先前的、以前的" },
+                { en: "Retire", zh: "退休", root: "词根：re-(back) + tire(拉) = 退休、撤退" },
+                { en: "Undoubtedly", zh: "无疑地", root: "词根：un-(not) + doubt(怀疑) + ed(形容词后缀) + ly(副词后缀) = 无疑地" },
+                { en: "Voyage", zh: "航海；航行", root: "源自拉丁语viaticum(旅途) = 航行、旅行" },
+                { en: "Waken", zh: "唤醒；醒来", root: "源自古英语wæcnan(醒来) = 唤醒、醒来" }
+            ],
+            phrases: [
+                { en: "be determined to (do sth.)", zh: "决心做某事" },
+                { en: "by far", zh: "…得多" },
+                { en: "cannot help", zh: "禁不住" },
+                { en: "give up", zh: "放弃" },
+                { en: "in spite of", zh: "尽管；虽然" },
+                { en: "set out", zh: "着手，开始" },
+                { en: "turn over", zh: "（使）翻倒，（使）倾覆" }
+            ],
+            sentences: [
+                { en: "Fortunately there was a hospital nearby and we took him there at once.", zh: "幸好附近有家医院，我们立即把他送到了那里。" },
+                { en: "Mary thought it difficult to carry out her plan all by herself.", zh: "玛丽觉得单靠自己的力量执行她的计划是困难的。" },
+                { en: "He is determined to continue his experiment but this time he'll do it another way.", zh: "他决心继续他的实验，不过他将用另一种方法来做。" },
+                { en: "When she read the novel, she couldn't help thinking of the five years she had spent in the countryside.", zh: "她在读这部小说时，不禁想起了她在农村度过的那 5 年。" },
+                { en: "We didn't think he could cover the distance in a quarter of an hour, but he succeeded in doing it.", zh: "我们认为他不能在一刻钟内走完那段路程，但他成功地做到这一点。" }
+            ],
+            translation: {
+                en: "The years passed. He gave up flying and began sailing. He enjoyed it greatly. Chichester was already 58 years old when he won the first solo transatlantic race. His old dream of going around the world came back, but this time he would sail. His friends and doctors did not think he could do it, as he had lung cancer. But Chichester was determined to carry out his plan. In August, 1966, at the age of nearly sixty-five, an age when many men retire, he began the greatest voyage of his life. Soon, he was away in his new 16-meter boat, Gispsy Moth.",
+                zh: "好多年过去了。他放弃了飞行，开始航海。他领略到航海的巨大乐趣。奇切斯特在首届横渡大西洋单人航海比赛中夺魁时，已经 58 岁了。他周游世界的夙愿又被重新唤起，不过这一次他要驾船环游。由于他患有肺癌，他的朋友们和医生们都认为他不该去，但奇切斯特决意实施自己的计划。1966 年 8 月，在他快年满 65 岁的时候--许多人在这个年龄已经退休--他开始了一生中最了不起的一次航海。不久，他就驾着那艘 16 米长的新吉普赛·莫斯号启程出海了。"
+            }
+        });
+        
+        // 添加Unit 3
+        unitsData.push({
+            unitNumber: 3,
+            title: "Unit 3",
+            words: [
+                { en: "Arrange", zh: "安排，筹划", root: "词根：ar-(to) + range(排列) = 安排、整理" },
+                { en: "Bunch", zh: "（一）束，（一）串", root: "源自古英语bunc(团) = 一束、一串" },
+                { en: "Content", zh: "满意的；高兴的", root: "词根：con-(together) + tent(持有) = 满足的、满意的" },
+                { en: "Decade", zh: "十年", root: "词根：dec(十) + ade(时期) = 十年" },
+                { en: "Efficient", zh: "高效的", root: "词根：ef-(out) + fic(做) + ient(形容词后缀) = 高效的、有效率的" },
+                { en: "Endure", zh: "忍受，忍耐", root: "词根：en-(in) + dur(坚硬) + e(动词后缀) = 忍受、持久" },
+                { en: "Medal", zh: "奖章", root: "源自拉丁语metallum(金属) = 奖章、勋章" },
+                { en: "Minor", zh: "较小的；次要的", root: "源自拉丁语minor(更小的) = 次要的、较小的" },
+                { en: "Occasion", zh: "时刻，时机；场合", root: "词根：oc-(toward) + cas(落下) + ion(名词后缀) = 场合、时机" },
+                { en: "Operate", zh: "开刀，动手术", root: "词根：op-(工作) + er(行为) + ate(动词后缀) = 操作、动手术" },
+                { en: "Parcel", zh: "包裹", root: "源自古法语parcelle(小部分) = 包裹" },
+                { en: "Postman", zh: "邮递员", root: "词组：post(邮件) + man(人) = 邮递员" },
+                { en: "Primary", zh: "最初的；首要的；根本的", root: "词根：prim(第一) + ary(形容词后缀) = 主要的、基本的" },
+                { en: "Rare", zh: "罕见的；不常发生的", root: "源自拉丁语rarus(稀少的) = 稀有的、罕见的" },
+                { en: "Reluctantly", zh: "不情愿地，勉强地", root: "词根：re-(back) + luct(抗争) + ant(形容词后缀) + ly(副词后缀) = 不情愿地" },
+                { en: "Spot", zh: "点，斑点", root: "源自中古英语spotte(斑点) = 斑点、地点" },
+                { en: "Tremble", zh: "颤抖", root: "源自法语trembler(颤抖) = 颤抖、发抖" }
+            ],
+            phrases: [
+                { en: "after all", zh: "毕竟，终究" },
+                { en: "at other times", zh: "在别的时候；平时" },
+                { en: "be sure of", zh: "对·有把握，确信" },
+                { en: "look after", zh: "照料，照顾" },
+                { en: "pick up", zh: "拿起，捡起；增加" },
+                { en: "round/around the corner", zh: "在附近的；即将来临的" }
+            ],
+            sentences: [
+                { en: "That famous actor seemed content to play a minor part in the play.", zh: "那位名演员似乎很乐意在剧中扮演一个次要角色。" },
+                { en: "She agreed, very reluctantly, to be operated on by a young doctor.", zh: "她十分勉强地同意让一位年轻医生为她动手术。" },
+                { en: "After reading the letter the old man was so disappointed that he tore it into little bits with trembling fingers.", zh: "老人读完信后失望之极，竟用颤抖的手把它撕得粉碎。" },
+                { en: "Even if his grandmother could not come to his birthday party, she would send him a lovely present.", zh: "即使他的祖母不能来参加他的生日宴会，她也会寄给他一件可爱的礼物。" },
+                { en: "They've arranged for us to visit the Great Wall tomorrow, and I'm sure we'll have a good time/enjoy ourselves there.", zh: "他们已安排好让我们明天去游览长城，我相信我们在那儿一定会玩得很开心。" }
+            ],
+            translation: {
+                en: "He gave her four envelopes. Three were unsealed cards from old friends. The fourth was sealed, in Myra's writing. The old lady felt a pang of disappointment. Almost reluctantly she tore the envelop open. Folded in the card was a piece of paper. Written on the card was a massage under the printed Happy Birthday-Buy yourself something nice with the cheque, Myra and Harold. The cheque fluttered to the floor like a bird with a broken wing. Slowly the old lady stooped to pick it up. Her present, her lovely present. With trembling fingers she tore it into little bits.",
+                zh: "他交给他4封信。3封没封口，是老朋友寄来的生日卡。第四封是封口的，上面的字迹出自迈拉之手。失望的痛楚攫住了老太太的心。她几乎是带几分勉强之意撕开了信封。只见生日卡里夹着一张叠起来的纸。卡上印有生日快乐字样，下面写着一句附言-拿这张支票给自己买样称心的东西吧-迈拉和哈罗德。支票像断了翅膀的小鸟似地飘落到地板上。老太太慢慢地弯下腰，把它从地上捡了起来。她的礼物，她的可爱的礼物！她用颤抖的手指把支票撕了个粉碎。"
+            }
+        });
+        
+        // 添加Unit 4
+        unitsData.push({
+            unitNumber: 4,
+            title: "Unit 4",
+            words: [
+                { en: "Activity", zh: "活动", root: "词根：act(行动) + ivity(名词后缀) = 活动、行动" },
+                { en: "Actually", zh: "真实地；实际上", root: "词根：act(行动) + ual(形容词后缀) + ly(副词后缀) = 实际上、事实上" },
+                { en: "Barely", zh: "仅仅，勉强；几乎没有", root: "词组：bare(赤裸的) + ly(副词后缀) = 几乎不、勉强" },
+                { en: "Current", zh: "当前的", root: "词根：curr(跑) + ent(形容词后缀) = 当前的、流动的" },
+                { en: "Disturb", zh: "使烦恼", root: "词根：dis-(apart) + turb(搅动) = 打扰、使烦恼" },
+                { en: "Emotional", zh: "感情的", root: "词根：e-(out) + mot(移动) + ion(名词后缀) + al(形容词后缀) = 情感的" },
+                { en: "Entertainment", zh: "快乐；乐趣；娱乐", root: "词根：enter-(between) + tain(持有) + ment(名词后缀) = 娱乐、消遣" },
+                { en: "Gap", zh: "缺口，间隙；分歧，隔阂", root: "源自古英语gæppe(洞) = 间隙、缺口" },
+                { en: "Invent", zh: "发明", root: "词根：in-(in) + vent(来) = 发明、创造" },
+                { en: "Involve", zh: "（必须）包括", root: "词根：in-(in) + volve(滚) = 包含、涉及" },
+                { en: "Neighborhood", zh: "邻近地区；地段", root: "词组：neighbor(邻居) + hood(状态) = 邻居关系、街区" },
+                { en: "Network", zh: "广播（或电视）联播公司；广播（或电视）网", root: "词组：net(网) + work(工作) = 网络、网状物" },
+                { en: "Prohibit", zh: "禁止", root: "词根：pro-(forward) + hibit(持有) = 禁止、阻止" },
+                { en: "Proposal", zh: "提议，建议", root: "词根：pro-(forward) + pos(放置) + al(名词后缀) = 提议、建议" },
+                { en: "Rate", zh: "率", root: "源自拉丁语rata(计算) = 比率、速度" },
+                { en: "Social", zh: "社会的", root: "词根：soci(同伴) + al(形容词后缀) = 社会的、交际的" },
+                { en: "Typical", zh: "典型的", root: "词根：typ(类型) + ical(形容词后缀) = 典型的、特有的" },
+                { en: "Worthwhile", zh: "值得花时间（或精力）的；有价值的", root: "词组：worth(价值) + while(时间) = 值得的" }
+            ],
+            phrases: [
+                { en: "at first glance", zh: "乍一看；最初考虑时" },
+                { en: "bring together", zh: "使相聚" },
+                { en: "come up with", zh: "想出；提出" },
+                { en: "grow up", zh: "成长，长大" },
+                { en: "have a ball", zh: "［俚］玩得开心" },
+                { en: "in part", zh: "在一定程度上；部分地" }
+            ],
+            sentences: [
+                { en: "I do hope that you can come up with a better solution than this one.", zh: "我真希望你能拿出一个比这更好的解决办法来。" },
+                { en: "It is well known that lung cancer is caused at least in part by smoking too much.", zh: "众所周知，肺癌至少部分地是由于吸烟过多而引起的。" },
+                { en: "To take this job would involve working on weekends frequently, but John didn't mind.", zh: "接受这份工作就得经常在周末上班，但约翰并不在意。" },
+                { en: "I propose that we go to find Prof. Smith in his office right after the meeting and invite him to our English evening.", zh: "我提议咱们会后马上去办公室找史密斯教授，邀请他参加我们的英语晚会。" },
+                { en: "At first glance the picture didn't look very good, but after examining it carefully, we found that it was indeed a masterpiece.", zh: "乍一看，这幅画并不好，但经过仔细观察，我们才发现它的确是一幅杰作。" }
+            ],
+            translation: {
+                en: "Let us take a serious, reasonable look at what the results might be if such a proposal were accepted. Families might use the time for a real family hour. Without the distraction of TV, they might sit around together after dinner and actually talk to one another. It is well known that many of our problems-everything, in fact, from the generation gap to the high divorce rate to some forms of mental illness-are caused at least in part by failure to communicate. By using the quiet family hour to discuss our problems, we might get to know each other better, and to like each other better.",
+                zh: "让我们认真而通情达理地想一下，如果这一建议被采纳的话会有什么样的结果。千家万户也许会利用这段时间真正地团聚一番。没有电视机的干扰，他们晚饭后也许会围坐在一起，真正地交谈起来。众所周知，我们的许多问题-事实上是所有的问题，从代沟到高离婚率再到某些精神疾病-至少部分地是由于没能交流思想而引起的。利用这安静的、全家聚在一起的时刻来讨论我们的各种问题，我们相互之间也许会更加了解、更加相爱。"
+            }
+        });
+        
+        // 添加Unit 5
+        unitsData.push({
+            unitNumber: 5,
+            title: "Unit 5",
+            words: [
+                { en: "Ancient", zh: "很旧的；古代的", root: "词根：anc(老) + ient(形容词后缀) = 古代的、古老的" },
+                { en: "Background", zh: "不显眼的位置；背景", root: "词组：back + ground = 背景、经历" },
+                { en: "Contract", zh: "合同", root: "词根：con-(together) + tract(拉) = 合同、契约" },
+                { en: "Echo", zh: "回声，反响；发出回声", root: "源自希腊语ekhō(回声) = 回声、共鸣" },
+                { en: "Embarrass", zh: "使窘迫，使尴尬", root: "词根：em-(in) + barr(栏杆) + ass(动词后缀) = 使尴尬、使为难" },
+                { en: "Enclose", zh: "附上；围住", root: "词根：en-(in) + close(关闭) = 围住、附上" },
+                { en: "Favorite", zh: "最喜欢的人（或物）a.最受喜爱的", root: "词根：fav(喜爱) + or(名词后缀) + ite(形容词后缀) = 喜爱的、中意的" },
+                { en: "Genius", zh: "天才（人物）；天赋", root: "源自拉丁语genius(守护神) = 天才、才能" },
+                { en: "Graduate", zh: "（大学）毕业 n.毕业生", root: "词根：grad(步) + uate(动词后缀) = 毕业、获得学位" },
+                { en: "Illustrate", zh: "给·画插图；举例说明", root: "词根：il-(in) + lustr(光) + ate(动词后缀) = 说明、解释" },
+                { en: "Laughter", zh: "笑（声）", root: "来自laugh(笑) + ter(名词后缀) = 笑声" },
+                { en: "Laundry", zh: "待洗（或已洗的）衣物；洗衣店", root: "源自法语lavanderie(洗衣房) = 洗衣店、要洗的衣物" },
+                { en: "Minus", zh: "稍差一点的，减；低于零的；负数的", root: "源自拉丁语minus(更少的) = 减去、负的" },
+                { en: "Nonsense", zh: "胡说，废话；荒谬的想法", root: "词组：non(不) + sense(意义) = 废话、胡言" },
+                { en: "Odds", zh: "极大的困难；可能性", root: "源自odd(奇数的、怪异的) = 可能性、差异" },
+                { en: "Package", zh: "包装袋，包装盒；包；袋；盒", root: "词根：pack(打包) + age(表示物体的后缀) = 包裹、一揽子" },
+                { en: "Publish", zh: "出版，发行；发布", root: "词根：pub(公众) + lish(动词后缀) = 出版、发行" },
+                { en: "Qualification", zh: "资格", root: "词根：qual(质量) + ific(使...) + ation(名词后缀) = 资格、条件" },
+                { en: "Qualify", zh: "使可胜任；使具有资格，使合格", root: "词根：qual(质量) + ify(使...) = 取得资格、使合格" },
+                { en: "Semester", zh: "学期", root: "词根：semi-(半) + (m)ester(月) = 学期" },
+                { en: "String", zh: "线，细绳", root: "源自古英语streng(线) = 线、细绳" },
+                { en: "Worldwide", zh: "在世界各地 a.世界范围的", root: "词组：world + wide = 全世界的、世界范围的" }
+            ],
+            phrases: [
+                { en: "at random", zh: "任意地，胡乱地" },
+                { en: "burst into", zh: "突然·起来" },
+                { en: "fit in", zh: "安排时间做（某事）或见（某人" },
+                { en: "here and there", zh: "这儿那儿，各处" },
+                { en: "set one's mind on/to", zh: "决心要，一心想" },
+                { en: "to sb.'s astonishment", zh: "令某人惊讶的是" },
+                { en: "work on", zh: "从事于，致力于" }
+            ],
+            sentences: [
+                { en: "Jane picked up a magazine from the bookshelf and started reading here and there at random.", zh: "简从书架上拿了一本杂志，开始东一页西一页地随便翻阅。" },
+                { en: "She was embarrassed when they kept telling her she had a genius for mathematics.", zh: "他们老是对她说她有数学天才，她感到很不好意思。" },
+                { en: "With this letter I enclose some illustrations for the story.", zh: "我随信附上这篇故事的几张插图。" },
+                { en: "He told a story to illustrate why you should never sign any contract before you have examined its provisions in detail.", zh: "他讲了个故事来说明为什么在详细查看条款之前决不要在任何合同上签字。" },
+                { en: "Dr. Green is busy working on a cure for AIDS, but from next month on he'll be able to fit in twenty patients or so on Monday morning.", zh: "格林大夫忙着研制一种治艾滋病的药物，但从下月起他能安排时间在星期一上午看 20 个左右的病人了。" }
+            ],
+            translation: {
+                en: "People ask what college I attended, what degree I have, and what qualifications I have to be a writer. The answer is none. I just write. I'm not a genius, I'm not gifted and don't write right. I'm not disciplined, either, and spend more time with my children and friends than I do writing. I didn't own a thesaurus until four years ago and I use a small Webster's dictionary that I bought for 89 cents. I use an electric typewriter that I paid $ 129 for six years ago. I have never used a word processor. I do all the cooking, cleaning and laundry for a family of six and fit my writing in a few minutes here and there. I write everything in longhand while sitting on the sofa with my four kids, eating pizza and watching TV. When the book is finished, I type it and mail it to the publisher.",
+                zh: "人们问我读过什么大学，有什么学位，有什么资历成为一个作家。我的回答是什么都没有。我只是写。我不是天才，我没有天赋，写作是野路子。我也没受过什么训练，而且在孩子们和朋友们身上花的时间比写作还多。直到 4 年前我才有了一本同类词汇编，我一直用一本 89 美分买来的韦氏小词典。我用的电动打字机是 6 年前花 129 美元买的。我从未用过文字处理机。我们一家六口，烧饭、洗衣、打扫卫生全是我一个人做，只能见缝插针地抽空写那么几分钟。跟四个孩子坐在沙发上边吃匹萨饼边看电视时，我就用手写的方式写东西。书写完后，再把它打出来寄给出版商。"
+            }
+        });
+
+        // 添加Unit 6
+        unitsData.push({
+            unitNumber: 6,
+            title: "Unit 6",
+            words: [
+                { en: "Amaze", zh: "使大为惊讶，使惊愕", root: "词根：a-(to) + maze(迷惑) = 使惊奇、使惊讶" },
+                { en: "Apply", zh: "申请", root: "词根：ap-(to) + ply(折叠) = 申请、应用" },
+                { en: "Career", zh: "职业；生涯", root: "源自法语carrière(道路) = 职业、生涯" },
+                { en: "Decrease", zh: "减少", root: "词根：de-(down) + crease(增长) = 减少、降低" },
+                { en: "Efficiency", zh: "效率", root: "词根：ef-(out) + fic(做) + iency(名词后缀) = 效率、效能" },
+                { en: "Expert", zh: "专家，能手", root: "词根：ex-(out) + pert(尝试) = 专家、行家" },
+                { en: "Findings", zh: "调查（或研究）的结果", root: "来自find(发现) + ing(动名词) + s(复数) = 发现物、结论" },
+                { en: "Foundation", zh: "基础", root: "词根：found(建立) + ation(名词后缀) = 基础、基金会" },
+                { en: "Furthermore", zh: "此外；而且", root: "词组：further + more = 此外、而且" },
+                { en: "Inspect", zh: "检查", root: "词根：in-(in) + spect(看) = 检查、视察" },
+                { en: "Management", zh: "资方；管理（部门）", root: "词根：manage(管理) + ment(名词后缀) = 管理、经营" },
+                { en: "Observation", zh: "观察", root: "词根：ob-(towards) + serv(留心) + ation(名词后缀) = 观察、监视" },
+                { en: "Productive", zh: "多产的；富有成效的", root: "词根：pro-(forward) + duct(引导) + ive(形容词后缀) = 生产的、多产的" },
+                { en: "Project", zh: "项目；方案", root: "词根：pro-(forward) + ject(投掷) = 项目、计划" },
+                { en: "Promote", zh: "提升；促销", root: "词根：pro-(forward) + mot(移动) + e(动词后缀) = 促进、提升" },
+                { en: "Recognize", zh: "认出；识别", root: "词根：re-(again) + cogn(知道) + ize(动词后缀) = 认出、承认" },
+                { en: "Relieve", zh: "减轻", root: "词根：re-(again) + liev(提起) + e(动词后缀) = 减轻、解除" },
+                { en: "Shift", zh: "班；轮班", root: "源自古英语sciftan(安排) = 转移、轮班" },
+                { en: "Unfortunately", zh: "不幸的是；遗憾的是", root: "词根：un-(not) + fortune(幸运) + ate(形容词后缀) + ly(副词后缀) = 不幸地" }
+            ],
+            phrases: [
+                { en: "as a result", zh: "结果；因此" },
+                { en: "except for", zh: "除了……外" },
+                { en: "find out", zh: "查明；发现" },
+                { en: "hold back", zh: "抑制，控制" },
+                { en: "in search of", zh: "寻找" },
+                { en: "rob (sb.) of (sth.)", zh: "剥夺；抢劫" },
+                { en: "think over", zh: "认真考虑" }
+            ],
+            sentences: [
+                { en: "It was reported that the building of the railway had been held up by a flood.", zh: "据报道，那条铁路曾因洪水而停止修建。" },
+                { en: "The foreign expert hopes to achieve all his aims in three years.", zh: "那位外国专家希望在 3 年内达到所有的目标。" },
+                { en: "I'd like very much to buy the English dictionary. Unfortunately, I haven't got enough money on me.", zh: "我很想买这本英文词典，遗憾的是我身上带的钱不够。" },
+                { en: "What do you think a scientist must do in order to keep up with the developments in his field?", zh: "一个科学家要跟上本领域的发展，你认为必须做些什么？" },
+                { en: "If excellent workers get frequent pay rises and promotions, they will have greater incentive to produce.", zh: "如果优秀工人经常得到加薪和提拔，他们就会有更大的生产积极性。" }
+            ],
+            translation: {
+                en: "I went to the plant and spent about a week looking around and making notes. I was really amazed at what I saw. Most curious of all, there was no quality control whatsoever. No one inspected the final products of the factory. As a result some of the shirts that were put in boxes for shipment were missing one or two buttons, the collar, even a sleeve sometimes! The working conditions were poor. The tables where the workers sat were very high and uncomfortable. Except for a half hour at lunchtime, there were no breaks in the day to relieve the boring work. I was amazed that the workers hadn't gone on strike.",
+                zh: "我来到厂里，花了一个星期左右的时间一边到处查看，一边做些笔记。说真的，我对看到的情况不胜惊讶。最为奇怪的是，厂里竟然没有任何质量控制。没有人检验工厂生产的产品。结果，有些装箱待运的衬衫不是缺了一两粒纽扣，就是少了衣领，有时甚至还会少只袖子。工厂的生产条件很差。工作台很高，工人们坐在旁边很不舒服。除了吃中饭的半个小时外，全天没有别的休息时间来调剂一下令人厌倦的工作。使我感到惊奇的是，工人们竟然没有罢工。"
+            }
+        });
+
+        // 添加Unit 7
+        unitsData.push({
+            unitNumber: 7,
+            title: "Unit 7",
+            words: [
+                { en: "Advantage", zh: "利益，好处；优点", root: "词根：ad-(to) + vant(来) + age(名词后缀) = 优势、好处" },
+                { en: "Appearance", zh: "外表", root: "词根：ap-(to) + pear(显示) + ance(名词后缀) = 外表、出现" },
+                { en: "Cheat", zh: "欺骗", root: "源自古法语escheter(没收) = 欺骗、作弊" },
+                { en: "Dignity", zh: "尊严", root: "词根：dign(值得) + ity(名词后缀) = 尊严、尊贵" },
+                { en: "Elderly", zh: "上了年纪的", root: "词根：eld(老) + er(比较级) + ly(形容词后缀) = 年长的、上了年纪的" },
+                { en: "Eventually", zh: "终于，最终", root: "词根：event(事件) + ual(形容词后缀) + ly(副词后缀) = 最终、终于" },
+                { en: "Evident", zh: "明显的，明白的", root: "词根：e-(out) + vid(看) + ent(形容词后缀) = 明显的、明白的" },
+                { en: "Intention", zh: "意图；打算；目的", root: "词根：in-(toward) + tent(伸展) + ion(名词后缀) = 意图、目的" },
+                { en: "Occasionally", zh: "偶尔地；间或发生地", root: "词根：oc-(against) + cas(落) + ion(名词后缀) + al(形容词后缀) + ly(副词后缀) = 偶尔地" },
+                { en: "Positive", zh: "有把握的，确信的", root: "词根：pos(放置) + itive(形容词后缀) = 积极的、肯定的" },
+                { en: "Privilege", zh: "特权", root: "词根：priv(个人的) + ilege(法律) = 特权、优待" },
+                { en: "Prosperous", zh: "富裕的；成功的；昌盛的", root: "词根：pro-(forward) + sper(希望) + ous(形容词后缀) = 繁荣的、成功的" },
+                { en: "Sample", zh: "品尝；体验 n.样品，标本", root: "源自拉丁语exemplum(例子) = 样品、尝试" },
+                { en: "Select", zh: "挑选", root: "词根：se-(apart) + lect(选择) = 选择、挑选" },
+                { en: "Sincere", zh: "诚恳的，真挚的", root: "词根：sin-(without) + cere(蜡) = 真诚的、诚挚的" },
+                { en: "Suspect", zh: "怀疑；猜测", root: "词根：sus-(under) + pect(看) = 怀疑、疑心" }
+            ],
+            phrases: [
+                { en: "And what's more", zh: "［插入语］而且，更重要的是" },
+                { en: "Break off", zh: "中止，中断" },
+                { en: "do sb. a favo(u)r", zh: "给某人以恩惠；帮某人忙" },
+                { en: "lay out", zh: "陈列" },
+                { en: "long for", zh: "渴望" },
+                { en: "mistake...for", zh: "把……错认为" },
+                { en: "out of place", zh: "不适当的；不相称的" },
+                { en: "pull out", zh: "抽出，取出" },
+                { en: "take advantage of", zh: "利用" },
+                { en: "to sb.'s taste", zh: "合某人的口味；称某人的心" }
+            ],
+            sentences: [
+                { en: "He often took advantage of her lack of business sense to cheat her.", zh: "他常利用她缺乏生意头脑而欺骗她。" },
+                { en: "Sam could not afford the camera he longed for because it was too expensive.", zh: "萨姆买不起他想要的那种照相机，因为那相机太贵了。" },
+                { en: "He was busy writing the story all the morning, only breaking off occasionally to have a cup of tea.", zh: "整个上午他都在忙于写那篇故事，只是偶尔停下来喝杯茶。" },
+                { en: "Undoubtedly they do not have the intention of making an engineer of him, and I suspect they never will.", zh: "他们肯定没有打算把他培养成一名工程师，我猜想他们永远也不会这样做。" },
+                { en: "I suspected there was no quality control whatsoever in the factory. After making observations for a week I found this was indeed the case.", zh: "我怀疑这家工厂什么质量控制都没有。经过一周的观察，我发现情况果真如此。" }
+            ],
+            translation: {
+                en: "The elderly gentleman, who was poorly but neatly dressed, accepted the spoon and began eagerly to sample one after another of the puddings, only breaking off occasionally to wipe his red eyes with a large torn handkerchief. All the time it was evident that he sincerely believed that he might eventually buy one of these puddings, and I am positive that he did not for a moment feel that he was in any way cheating the store. Poor old chap! Probably he had come down in the world and this sampling was all that was left him from the time when he could afford to come and select his favorite pudding.",
+                zh: "这位老先生衣着虽然破旧，但却十分整洁。他接过调羹，便开始急切地一只接一只地品尝起布丁来，只是偶尔停下来，用一方大的破手绢擦擦他的红眼睛。有一点至始至终很明显：他真诚地相信自己最终也许会买一只布丁；而我也确信，他一点也不觉得自己是在欺骗商店。可怜的老头儿！很可能他已经家道败落。从前他是有钱来选购他最喜爱的布丁的，而今却只能这样来品尝一下布丁的味道了。"
+            }
+        });
+
+        // 添加Unit 8
+        unitsData.push({
+            unitNumber: 8,
+            title: "Unit 8",
+            words: [
+                { en: "Absolute", zh: "完全的，绝对的", root: "词根：ab-(away) + solute(松开) = 绝对的、完全的" },
+                { en: "Acquire", zh: "学得；获得", root: "词根：ac-(to) + quire(寻求) = 获得、取得" },
+                { en: "Approach", zh: "接近；临近", root: "词根：ap-(to) + proach(接近) = 接近、靠近" },
+                { en: "Astonish", zh: "使大为惊讶", root: "词根：a-(to) + ston(雷) + ish(动词后缀) = 使惊讶、使震惊" },
+                { en: "Avoid", zh: "防止；避免", root: "词根：a-(away) + void(空) = 避免、躲避" },
+                { en: "Community", zh: "社区", root: "词根：com-(together) + mun(共同) + ity(名词后缀) = 社区、团体" },
+                { en: "Compose", zh: "撰写；创作", root: "词根：com-(together) + pose(放置) = 组成、创作" },
+                { en: "Confidence", zh: "信心，把握；自信", root: "词根：con-(with) + fid(信任) + ence(名词后缀) = 信心、信任" },
+                { en: "Critical", zh: "决定性的，关键的；危急的", root: "词根：crit(判断) + ical(形容词后缀) = 关键的、批评的" },
+                { en: "Deny", zh: "拒绝给予；否认", root: "词根：de-(away) + ny(说不) = 否认、拒绝" },
+                { en: "Expose", zh: "暴露；使无遮盖（或保护", root: "词根：ex-(out) + pose(放置) = 暴露、揭露" },
+                { en: "Gratitude", zh: "感激之情，感恩之心", root: "词根：grat(感激) + itude(名词后缀) = 感谢、感激" },
+                { en: "Indicate", zh: "表明；象征", root: "词根：in-(in) + dic(说) + ate(动词后缀) = 指示、表明" },
+                { en: "Instant", zh: "立即的，紧急的", root: "词根：in-(in) + stant(站立) = 立即的、瞬间的" },
+                { en: "Instantly", zh: "立即", root: "词根：in-(in) + stant(站立) + ly(副词后缀) = 立即、马上" },
+                { en: "Lucky", zh: "幸运的", root: "来自luck(运气) + y(形容词后缀) = 幸运的、侥幸的" },
+                { en: "Payment", zh: "支付，付款；支付的款项", root: "词根：pay(支付) + ment(名词后缀) = 支付、款项" },
+                { en: "Private", zh: "私人的，个人的", root: "词根：priv(个人的) + ate(形容词后缀) = 私人的、私下的" },
+                { en: "Range", zh: "一系列，一排；范围", root: "源自古法语rangier(排列) = 范围、系列" },
+                { en: "Reveal", zh: "泄露；使显露", root: "词根：re-(back) + veal(面纱) = 揭示、透露" },
+                { en: "Somehow", zh: "以某种方式；不知为什么", root: "词组：some + how = 以某种方式、莫名其妙地" },
+                { en: "Stretch", zh: "节俭地使用；（使）变长（或宽），拉长", root: "源自古英语streccan(伸展) = 伸展、拉长" }
+            ],
+            phrases: [
+                { en: "come true", zh: "实现，成真" },
+                { en: "come upon", zh: "偶然遇见（或发现）" },
+                { en: "do well by", zh: "对（某人）好" },
+                { en: "hold back", zh: "抑制，控制" },
+                { en: "in search of", zh: "寻找" },
+                { en: "rob (sb.) of (sth.)", zh: "剥夺；抢劫" },
+                { en: "think over", zh: "认真考虑" }
+            ],
+            sentences: [
+                { en: "I am lucky to have acquired a wide range of skills when I was young.", zh: "我很幸运，在我年轻的时候就学会了许多不同的技能。" },
+                { en: "These drawings, which are worth something like 50 million dollars, must not be exposed to direct sunlight.", zh: "这些画价值在 5000 美元左右，绝不能直接暴露在阳光之下。" },
+                { en: "As the flu was spreading in the community, she wrapped herself in warm winter clothing to avoid catching the disease.", zh: "由于流感在社区传播，她用暖和的冬衣将自己裹起来，以防传染上这种疾病。" },
+                { en: "The defendant denied that he had ever made any payment to the government official to get a contract.", zh: "被告否认他曾经向政府官员付钱以获得合同。" },
+                { en: "As he gradually acquired confidence, his tone became natural and his words came out spontaneously.", zh: "当他渐渐获得信心的时候，他的语调变得自然了，说起话来也就自然脱口而出了。" }
+            ],
+            translation: {
+                en: "I was deeply moved by the discovery and yet sickened by the knowledge that, bursting into her room like this, I had robbed her of the pleasure of seeing me astonished and delighted on Christmas day. I hadn't wanted to know her lovely secret; still coming upon it like this made me feel as though I'd struck a blow against her happiness. I backed out, put the key back in its hiding place, and thought over what to do. I decided that between now and Christmas I must do nothing, absolutely nothing, to reveal the slightest hint of my terrible knowledge. I must avoid the least word that might reveal my possession of her secret. Nothing must deny her the happiness of seeing me completely amazed on Christmas day.",
+                zh: "这一发现让我深为感动，然而想到这样闯进她的卧室，从而剥夺了她在圣诞节那天见到我又惊又喜时的欢乐，我又感到厌恶。我本不想知道她这个可爱的秘密；但像这样偶然地发现了它竟然使我觉得好像重重地打击了她的欢乐一样。我从她的卧室退了出来，把钥匙放回它原本藏着的地方，认真考虑着该怎么办才好。我决定，从现在到圣诞节之间这段时间里，我必须不动声色，绝对不可露出一点蛛丝马迹暗示我已令人讨厌地知道了此事。我必须谨言慎行，不能让她知道我已掌握了她的秘密。必须想尽一切办法让她在圣诞节那天享受到看见我极为惊讶时的快乐。"
+            }
+        });
+
+        const unitSelectionContainer = document.getElementById('unitSelection');
+        const unitContentContainer = document.getElementById('unitContent');
+        let currentActiveButton = null;
+
+        function toggleTranslation(button) {
+            const translationText = button.nextElementSibling;
+            if (translationText.style.display === "none" || translationText.style.display === "") {
+                translationText.style.display = "block";
+                button.textContent = "隐藏翻译";
+            } else {
+                translationText.style.display = "none";
+                button.textContent = "显示翻译";
+            }
+        }
+
+        function loadUnit(unitNumber) {
+            const unit = unitsData.find(u => u.unitNumber === unitNumber);
+            if (!unit) return;
+
+            unitContentContainer.innerHTML = ''; // Clear previous content
+
+            const titleEl = document.createElement('h2');
+            titleEl.textContent = unit.title;
+            unitContentContainer.appendChild(titleEl);
+
+            // Words - 卡片式显示
+            if (unit.words && unit.words.length > 0) {
+                const wordsSection = document.createElement('div');
+                wordsSection.className = 'content-section';
+                const wordsTitle = document.createElement('h3');
+                wordsTitle.textContent = '单词 (Words)';
+                wordsSection.appendChild(wordsTitle);
+                
+                // 创建卡片容器
+                const wordsCards = document.createElement('div');
+                wordsCards.className = 'word-cards';
+                
+                unit.words.forEach(word => {
+                    // 创建单词卡片
+                    const wordCard = document.createElement('div');
+                    wordCard.className = 'word-card';
+                    
+                    const cardInner = document.createElement('div');
+                    cardInner.className = 'word-card-inner';
+                    
+                    // 卡片正面 - 显示英文
+                    const cardFront = document.createElement('div');
+                    cardFront.className = 'word-card-front';
+                    const wordEn = document.createElement('div');
+                    wordEn.className = 'word-card-en';
+                    wordEn.textContent = word.en;
+                    
+                    // 添加小喇叭图标和点击发音功能
+                    const speakerIcon = createSpeakerIcon();
+                    wordEn.appendChild(speakerIcon);
+                    
+                    // 为单词添加点击发音功能
+                    wordEn.addEventListener('click', function() {
+                        speakText(word.en);
+                    });
+                    
+                    cardFront.appendChild(wordEn);
+                    
+                    // 卡片背面 - 显示中文和词根
+                    const cardBack = document.createElement('div');
+                    cardBack.className = 'word-card-back';
+                    
+                    const wordZh = document.createElement('div');
+                    wordZh.className = 'word-card-zh';
+                    wordZh.textContent = word.zh;
+                    
+                    const wordRoot = document.createElement('div');
+                    wordRoot.className = 'word-card-root';
+                    wordRoot.textContent = word.root || "暂无词根信息";
+                    
+                    // 在背面也添加带发音功能的英文单词
+                    const wordEnBack = document.createElement('div');
+                    wordEnBack.className = 'word-card-en';
+                    wordEnBack.textContent = word.en;
+                    
+                    const speakerIconBack = createSpeakerIcon();
+                    wordEnBack.appendChild(speakerIconBack);
+                    
+                    wordEnBack.addEventListener('click', function() {
+                        speakText(word.en);
+                    });
+                    
+                    cardBack.appendChild(wordEnBack);
+                    cardBack.appendChild(wordZh);
+                    cardBack.appendChild(wordRoot);
+                    
+                    // 组装卡片
+                    cardInner.appendChild(cardFront);
+                    cardInner.appendChild(cardBack);
+                    wordCard.appendChild(cardInner);
+                    
+                    wordsCards.appendChild(wordCard);
+                });
+                
+                wordsSection.appendChild(wordsCards);
+                unitContentContainer.appendChild(wordsSection);
+            }
+
+            // Phrases
+            if (unit.phrases && unit.phrases.length > 0) {
+                const phrasesSection = document.createElement('div');
+                phrasesSection.className = 'content-section';
+                const phrasesTitle = document.createElement('h3');
+                phrasesTitle.textContent = '词组 (Phrases)';
+                phrasesSection.appendChild(phrasesTitle);
+                const phrasesList = document.createElement('ul');
+                unit.phrases.forEach(phrase => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'phrase-pair';
+                    
+                    // 创建英文部分带发音功能
+                    const enSpan = document.createElement('span');
+                    enSpan.className = 'en';
+                    enSpan.style.display = 'inline-flex';
+                    enSpan.style.alignItems = 'center';
+                    enSpan.textContent = phrase.en;
+                    
+                    // 添加发音图标
+                    const speakerIcon = createSpeakerIcon();
+                    enSpan.appendChild(speakerIcon);
+                    
+                    // 添加点击发音事件
+                    enSpan.addEventListener('click', function() {
+                        speakText(phrase.en);
+                    });
+                    
+                    const zhSpan = document.createElement('span');
+                    zhSpan.className = 'zh';
+                    zhSpan.textContent = phrase.zh;
+                    
+                    listItem.appendChild(enSpan);
+                    listItem.appendChild(zhSpan);
+                    
+                    phrasesList.appendChild(listItem);
+                });
+                phrasesSection.appendChild(phrasesList);
+                unitContentContainer.appendChild(phrasesSection);
+            }
+
+            // Sentences
+            if (unit.sentences && unit.sentences.length > 0) {
+                const sentencesSection = document.createElement('div');
+                sentencesSection.className = 'content-section';
+                const sentencesTitle = document.createElement('h3');
+                sentencesTitle.textContent = '句子 (Sentences)';
+                sentencesSection.appendChild(sentencesTitle);
+                unit.sentences.forEach((sentence, index) => {
+                    const sentenceItem = document.createElement('div');
+                    sentenceItem.className = 'sentence-item';
+                    
+                    // 创建带发音功能的英文句子
+                    const pEn = document.createElement('p');
+                    pEn.className = 'sentence-en';
+                    pEn.style.cursor = 'pointer';
+                    pEn.textContent = `${index + 1}. ${sentence.en}`;
+                    
+                    // 添加发音按钮
+                    const speakBtn = document.createElement('span');
+                    speakBtn.className = 'speak-btn';
+                    speakBtn.innerHTML = '🔊';
+                    speakBtn.title = '点击发音';
+                    pEn.appendChild(speakBtn);
+                    
+                    // 添加点击发音事件
+                    pEn.addEventListener('click', function() {
+                        speakText(sentence.en);
+                    });
+                    
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.className = 'translation-toggle';
+                    toggleBtn.textContent = '显示翻译';
+                    toggleBtn.onclick = function() { toggleTranslation(this); };
+                    const pZh = document.createElement('p');
+                    pZh.className = 'translation-text';
+                    pZh.textContent = sentence.zh;
+                    sentenceItem.appendChild(pEn);
+                    sentenceItem.appendChild(toggleBtn);
+                    sentenceItem.appendChild(pZh);
+                    sentencesSection.appendChild(sentenceItem);
+                });
+                unitContentContainer.appendChild(sentencesSection);
+            }
+
+            // Translation Passage
+            if (unit.translation) {
+                const translationSection = document.createElement('div');
+                translationSection.className = 'content-section translation-passage-item';
+                const translationTitle = document.createElement('h3');
+                translationTitle.textContent = '翻译 (Translation Passage)';
+                translationSection.appendChild(translationTitle);
+                
+                // 创建带发音功能的英文段落
+                const pEn = document.createElement('p');
+                pEn.style.cursor = 'pointer';
+                pEn.textContent = unit.translation.en;
+                
+                // 添加发音按钮
+                const speakBtn = document.createElement('button');
+                speakBtn.style.marginLeft = '10px';
+                speakBtn.style.padding = '5px 10px';
+                speakBtn.style.backgroundColor = '#007bff';
+                speakBtn.style.color = 'white';
+                speakBtn.style.border = 'none';
+                speakBtn.style.borderRadius = '4px';
+                speakBtn.innerHTML = '朗读段落 🔊';
+                
+                // 添加点击发音事件
+                speakBtn.addEventListener('click', function() {
+                    speakText(unit.translation.en);
+                });
+                
+                translationSection.appendChild(pEn);
+                translationSection.appendChild(speakBtn);
+                
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'translation-toggle';
+                toggleBtn.textContent = '显示翻译';
+                toggleBtn.style.marginTop = '10px';
+                toggleBtn.onclick = function() { toggleTranslation(this); };
+                const pZh = document.createElement('p');
+                pZh.className = 'translation-text';
+                pZh.textContent = unit.translation.zh;
+                
+                translationSection.appendChild(toggleBtn);
+                translationSection.appendChild(pZh);
+                unitContentContainer.appendChild(translationSection);
+            }
+        }
+
+        // 创建单元选择按钮
+        unitsData.forEach(unit => {
+            const button = document.createElement('button');
+            button.textContent = unit.title;
+            button.onclick = function() {
+                if (currentActiveButton) {
+                    currentActiveButton.classList.remove('active');
+                }
+                this.classList.add('active');
+                currentActiveButton = this;
+                loadUnit(unit.unitNumber);
+            };
+            unitSelectionContainer.appendChild(button);
+        });
+    </script>
+</body>
+</html> 
